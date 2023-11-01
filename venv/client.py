@@ -1,6 +1,6 @@
 import socket
 import tkinter as tk
-
+from tkinter import Label, Entry, Button
 from PIL import Image, ImageTk
 
 root = tk.Tk()
@@ -8,54 +8,55 @@ root.title("Client")
 image_label = tk.Label(root)
 image_label.pack()
 
-
-def change_image():
-    image = Image.open("original_image.png")
-    photo = ImageTk.PhotoImage(image)
-    image_label.config(image=photo)
-    image_label.image = photo
-    print('Changed image')
-
-
-# client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# client_socket.connect(("127.0.0.1", 12345))
-
-server_address = ("127.0.0.1", 12345)
-retry_interval = 15
+server_address = None
 client_socket = None
 
 
-# while True:
-#     try:
-#         if client_socket is None:
-#             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#             client_socket.connect(server_address)
-#             print("Подключено")
-#
-#         data = client_socket.recv(1024)
-#         if data == b"change_image":
-#             change_image()
-#     except ConnectionRefusedError:
-#         print("Не удалось подключиться. Повторная попытка через {} секунд...".format(retry_interval))
-#         if client_socket is not None:
-#             client_socket.close()
-#             client_socket = None
-#         time.sleep(retry_interval)
+def connect_to_server():
+    global server_address, client_socket
+    server_ip = ip_entry.get()
+    server_port_str = port_entry.get()
 
-def try_connect(client_socket=None):
     try:
-        if client_socket is None:
+        server_port = int(server_port_str)
+        server_address = (server_ip, server_port)
+
+        try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect(server_address)
-            print("Подключено")
-
-        data = client_socket.recv(1024)
-        if data == b"change_image":
-            change_image()
-    except ConnectionRefusedError:
-        print("Не удалось подключиться. Повторная попытка через {} секунд...".format(retry_interval))
-        root.after(15000, try_connect)  # 15sec
+            connect_status.config(text="Подключение успешно")
+        except:
+            connect_status.config(text="Не удалось подключиться")
+    except ValueError:
+        connect_status.config(text="Некорректный ввод")
 
 
-try_connect(client_socket)
+def send_signal():
+    if client_socket:
+        client_socket.send(b"change_image")
+        print("Сигнал отправлен")
+
+
+ip_label = Label(root, text="IP:")
+ip_label.pack()
+
+ip_entry = Entry(root)
+ip_entry.pack()
+
+port_label = Label(root, text="Port:")
+port_label.pack()
+
+port_entry = Entry(root)
+port_entry.pack()
+
+connect_button = Button(root, text="Подключиться", command=connect_to_server)
+connect_button.pack()
+
+connect_status = Label(root, text="")
+connect_status.pack()
+
+signal_button = Button(root, text="Отправить сигнал", command=send_signal)
+signal_button.pack()
+
+root.geometry("800x600")
 root.mainloop()
