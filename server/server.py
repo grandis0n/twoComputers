@@ -3,8 +3,11 @@ import tkinter as tk
 from tkinter import Label, Button
 from PIL import Image, ImageTk
 import threading
+import os
 
 counter = 0
+folder_path = 'img'
+image_files = [file for file in os.listdir(folder_path) if file.lower().endswith((".png", ".jpeg", ".jpg"))]
 
 
 def get_local_ip_port():
@@ -14,27 +17,33 @@ def get_local_ip_port():
 
 
 def start_server(ip, port):
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((ip, port))
-    server_socket.listen(1)
-    print("Ожидание подключения клиента...")
-    client_socket, client_address = server_socket.accept()
-    print("Подключено к клиенту:", client_address)
-
     while True:
-        data = client_socket.recv(1024)
-        if data == b"change_image":
-            change_image()
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((ip, port))
+        server_socket.listen(1)
+        print("Ожидание подключения клиента...")
+        client_socket, client_address = server_socket.accept()
+        print("Подключено к клиенту:", client_address)
+
+        while True:
+            data = client_socket.recv(1024)
+            if not data:
+                break
+            if data == b"change_image":
+                change_image()
+
+        print("Клиент отключился. Перезапуск сервера...")
+        server_socket.close()
 
 
 def change_image():
     global counter
     counter += 1
-    counter %= 5
+    counter %= image_files.__len__()
     max_width = 600
     max_height = 300
 
-    image = Image.open(f"img/{counter}.png")
+    image = Image.open(os.path.join(folder_path, image_files[counter]))
 
     if image.width > max_width or image.height > max_height:
         image.thumbnail((max_width, max_height))

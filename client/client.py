@@ -1,7 +1,6 @@
 import socket
 import tkinter as tk
 from tkinter import Label, Entry, Button
-from PIL import Image, ImageTk
 
 root = tk.Tk()
 root.title("Client")
