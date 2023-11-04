@@ -21,9 +21,9 @@ def start_server(ip, port):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((ip, port))
         server_socket.listen(1)
-        print("Ожидание подключения клиента...")
+        set_status("Ожидание подключения клиента...")
         client_socket, client_address = server_socket.accept()
-        print("Подключено к клиенту:", client_address)
+        set_status("Подключено к клиенту: " + str(client_address))
 
         while True:
             data = client_socket.recv(1024)
@@ -32,14 +32,14 @@ def start_server(ip, port):
             if data == b"change_image":
                 change_image()
 
-        print("Клиент отключился. Перезапуск сервера...")
+        set_status("Клиент отключился. Перезапуск сервера...")
         server_socket.close()
 
 
 def change_image():
     global counter
     counter += 1
-    counter %= image_files.__len__()
+    counter %= len(image_files)
     max_width = 600
     max_height = 300
 
@@ -55,8 +55,12 @@ def change_image():
 
 def update_ip_port():
     ip, port = get_local_ip_port()
-    ip_label.config(text=f"IP: {ip}")
-    port_label.config(text=f"Port: {port}")
+    ip_label.config(text="IP: " + str(ip))
+    port_label.config(text="Port: " + str(port))
+
+
+def set_status(message):
+    status_label.config(text=message)
 
 
 root = tk.Tk()
@@ -81,11 +85,13 @@ update_button.pack()
 image_label = tk.Label(root)
 image_label.pack()
 
+status_label = Label(frame, text="", font=("Helvetica", 12))
+status_label.pack()
+
 ip, port = get_local_ip_port()
 server_thread = threading.Thread(target=start_server, args=(ip, port))
 server_thread.daemon = True
 server_thread.start()
 
 update_ip_port()
-
 root.mainloop()

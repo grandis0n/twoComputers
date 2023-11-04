@@ -1,3 +1,4 @@
+import datetime
 import socket
 import tkinter as tk
 from tkinter import Label, Entry, Button
@@ -9,6 +10,9 @@ image_label.pack()
 
 server_address = None
 client_socket = None
+
+status_label = Label(root, text="")
+status_label.pack()
 
 
 def connect_to_server():
@@ -30,10 +34,18 @@ def connect_to_server():
         connect_status.config(text="Некорректный ввод")
 
 
+def set_status(message):
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    status_label.config(text=f"{message} ({current_time})")
+
+
 def send_signal():
     if client_socket:
-        client_socket.send(b"change_image")
-        print("Сигнал отправлен")
+        try:
+            client_socket.send(b"change_image")
+            set_status("Сигнал отправлен")
+        except:
+            set_status("Ошибка при отправке сигнала")
 
 
 ip_label = Label(root, text="IP:")
